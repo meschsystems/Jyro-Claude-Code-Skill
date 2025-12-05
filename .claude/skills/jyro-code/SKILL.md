@@ -94,7 +94,7 @@ if IsNull(Data.optional) then
 end
 
 # Property existence (checks defined AND not null)
-if Exists(Data, "optionalField") then
+if Exists(Data.optionalField) then
     Data.result = Data.optionalField
 end
 ```
@@ -684,7 +684,7 @@ var type = TypeOf(Data.value)  # "number", "string", "boolean", etc.
 
 # Null checking
 var isNull = IsNull(Data.optional)  # true if null
-var exists = Exists(Data, "field")  # true if defined and not null
+var exists = Exists(Data.field)  # true if defined and not null
 
 # Object keys - get all property names as an array
 var user = { "name": "Alice", "age": 30, "email": "alice@example.com" }
@@ -750,7 +750,7 @@ else
 end
 
 # Or use Exists for cleaner code
-if Exists(Data.user, "profile") and Exists(Data.user.profile, "name") then
+if Exists(Data.user.profile) and Exists(Data.user.profile.name) then
     Data.userName = Data.user.profile.name
 else
     Data.userName = "Guest"
@@ -995,7 +995,7 @@ foreach item in Data.items do
         continue
     end
 
-    if not Exists(item, "price") then
+    if not Exists(item.price) then
         Data.warning = "Item missing price: " + item.id
         continue
     end
@@ -1017,9 +1017,9 @@ For complex workflows, break logic into smaller scripts:
 ```jyro
 # Main script orchestrates
 var validationScript = @"
-    if not Exists(Data, 'email') or Data.email == '' then
+    if not Exists(Data.email) or Data.email == "" then
         Data.isValid = false
-        Data.error = 'Email required'
+        Data.error = "Email required"
     else
         Data.isValid = true
     end
@@ -1027,7 +1027,7 @@ var validationScript = @"
 
 var processingScript = @"
     Data.processedAt = Now()
-    Data.status = 'completed'
+    Data.status = "completed"
 "
 
 # Validate first
@@ -1132,7 +1132,7 @@ foreach item in Data.items do
         continue
     end
 
-    if not Exists(item, "price") or item.price is not number then
+    if not Exists(item.price) or item.price is not number then
         Append(Data.errors, "Item missing valid price: " + item.id)
         continue
     end
