@@ -296,10 +296,75 @@ foreach item in items do
     # Process item
 end
 
-# return - exit script immediately
-if Data.error then
-    return
+# return - exit script successfully (with optional message)
+if Data.valid then
+    return "Validation passed"
 end
+
+# fail - exit script with failure (with optional message)
+if Data.age < 18 then
+    fail "Must be 18 or older to proceed"
+end
+```
+
+**Script Exit Keywords** (`return` and `fail`):
+
+Both `return` and `fail` immediately halt script execution. They accept an optional message expression that must be on the same line.
+
+```jyro
+# return - Successful exit (script succeeds)
+return                              # No message
+return "Done"                       # With literal message
+return "Processed " + count + " items"  # With expression
+
+# fail - Failure exit (script fails)
+fail                                # Uses default "Script failed"
+fail "Invalid input"                # With literal message
+fail "Value " + Data.x + " is out of range"  # With expression
+```
+
+| Keyword | Script Success | Message Severity | Default Message |
+|---------|----------------|------------------|-----------------|
+| `return` | Yes (succeeds) | Info (if message provided) | None |
+| `fail` | No (fails) | Error | "Script failed" |
+
+**Use Cases**:
+```jyro
+# Early exit after validation passes
+if Data.status == "approved" then
+    Data.result = "Already processed"
+    return "Skipping - already approved"
+end
+
+# Validation failure with descriptive message
+if IsNull(Data.email) or Data.email == "" then
+    fail "Email is required"
+end
+
+if Data.age is not number then
+    fail "Age must be a number, got: " + TypeOf(Data.age)
+end
+
+# Conditional failure in business logic
+var balance = Data.account.balance
+var withdrawal = Data.amount
+if withdrawal > balance then
+    fail "Insufficient funds: requested " + withdrawal + " but only " + balance + " available"
+end
+
+# Success with summary message
+Data.processed = true
+return "Successfully processed order #" + Data.orderId
+```
+
+**CRITICAL**: The message expression must be on the **same line** as the keyword:
+```jyro
+# CORRECT - message on same line
+return "Success"
+
+# WRONG - message on different line (will be ignored!)
+return
+"This message is ignored"  # This is treated as a separate statement
 ```
 
 ### 5. Arrays
@@ -720,24 +785,22 @@ var data = InvokeRestMethod("https://api.example.com/data", "GET", null, null)
 
 ### Pattern: Input Validation
 ```jyro
-# Validate required fields
+# Validate required fields - use fail for validation errors
 if IsNull(Data.userId) or Data.userId == "" then
-    Data.error = "User ID is required"
-    return
+    fail "User ID is required"
 end
 
 if Data.age is not number then
-    Data.error = "Age must be a number"
-    return
+    fail "Age must be a number"
 end
 
 if Data.age < 0 or Data.age > 150 then
-    Data.error = "Invalid age"
-    return
+    fail "Invalid age: " + Data.age
 end
 
 # Proceed with valid data
 Data.valid = true
+return "Validation successful"
 ```
 
 ### Pattern: Safe Property Access
@@ -1093,6 +1156,8 @@ end
 5. Use short-circuit evaluation to prevent errors
 6. Create intermediate objects for nested property assignment
 7. Remember which functions mutate vs return new values
+8. Use `fail` for validation errors and business rule violations
+9. Use `return` with a message for early successful exits
 
 **NEVER**:
 1. Declare a variable named `Data`
@@ -1102,20 +1167,20 @@ end
 5. Rely on empty array/object being falsy (they're truthy!)
 6. Use compound assignment operators (+=, -=, etc. - not supported)
 7. Forget to capture return values from immutable functions (Sort, Filter, etc.)
+8. Put the message for `return` or `fail` on a different line (must be same line!)
 
 ## Example: Complete Script Template
 
 ```jyro
-# 1. Validate inputs
+# 1. Validate inputs - use fail for errors
 if IsNull(Data.items) or Data.items is not array then
-    Data.error = "Invalid input: items must be an array"
-    return
+    fail "Invalid input: items must be an array"
 end
 
 if Length(Data.items) == 0 then
     Data.result = []
     Data.summary = { "count": 0, "total": 0 }
-    return
+    return "No items to process"
 end
 
 # 2. Initialize output
@@ -1168,6 +1233,9 @@ Data.summary = {
 if count > 0 then
     Data.result = SortByField(Data.result, "price", "desc")
 end
+
+# 6. Exit with success message
+return "Processed " + count + " items successfully"
 ```
 
 This skill provides you with complete, accurate Jyro syntax and idioms. When helping users, always write syntactically perfect code that follows these patterns and avoids the documented gotchas.
